@@ -1,0 +1,17 @@
+{
+    "name": "Hello",
+    "version": "1.1.0",
+    "description": "makecode 的 poryf 软件包",
+    "license": "MIT",
+    "dependencies": {
+        "core": "*"
+    },
+    "files": [
+        "README.md",
+        "main.ts"
+    ],
+    "testFiles": [
+        "test.ts"
+    ],
+    "public": true
+}
