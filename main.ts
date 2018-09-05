@@ -1,6 +1,5 @@
-//%blockId=c_SR04 block="超声波传感器"
 //%color=#5C2D91 weight=100 icon="\uf205"
-namespace SR04 {
+namespace 超声波传感器（SR04） {
     //%blockId=c_SR04_getDistance block="获取距离(cm) Trig引脚%c_trigPin|Echo引脚%c_echoPin"
     export function c_SR04_getDistance(c_trigPin: DigitalPin, c_echoPin: DigitalPin): number {
         pins.setPull(c_trigPin, PinPullMode.PullNone);
