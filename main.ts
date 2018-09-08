@@ -8,7 +8,7 @@ namespace HC595 {
             return 0;
         }
     }
-    /*********74HC595写入数据(16引脚接3V3，13引脚接GND，10引脚接3V3，8引脚接GND)********/
+    /*********74HC595写入数据(16引脚接3V3， 13引脚接GND，10引脚接3V3，8引脚接GND)********/
     //%blockId=c_HC595_Actuator block="14号引脚 %pin1|11号引脚 %pin2|12号引脚 %pin3|数据 %val"
     //%weight=98 blockGap=10 color="#87CEEB"
     export function c_HC595_Actuator(pin1: DigitalPin, pin2: DigitalPin, pin3: DigitalPin, val: number): void {
