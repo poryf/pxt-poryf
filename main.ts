@@ -177,45 +177,47 @@ namespace 执行器类 {
     }
 
     /*****彩灯三种颜色*********/
-    //%blockId=c_colorLED1_Actuator block="单色灯 引脚R %pin|引脚G %pin2|引脚B %pin3|状态%value" 
+    //%blockId=c_colorLED1_Actuator block="彩灯 引脚R %pin|引脚G %pin2|引脚B %pin3|状态%value" 
     //%weight=90 blockGap=10 color="#150DED"
     export function c_colorLED1_Actuator(pin1: DigitalPin, pin2: DigitalPin, pin3: DigitalPin, value: c_colorLED): void {
         switch (value) {
-            case 0: {
+            case 0: 
                 pins.digitalWritePin(pin1, 1);
                 pins.digitalWritePin(pin2, 0);
                 pins.digitalWritePin(pin3, 0);
                 break;
-            }
-            case 1: {
+            
+            case 1: 
                 pins.digitalWritePin(pin1, 0);
                 pins.digitalWritePin(pin2, 1);
                 pins.digitalWritePin(pin3, 0);
                 break;
-            }
-            case 2: {
+            
+            case 2: 
                 pins.digitalWritePin(pin1, 0);
                 pins.digitalWritePin(pin2, 0);
                 pins.digitalWritePin(pin3, 1);
                 break;
-            }
-            case 3: {
+            
+            case 3:
                 pins.digitalWritePin(pin1, 0);
                 pins.digitalWritePin(pin2, 0);
                 pins.digitalWritePin(pin3, 0);
                 break;
-            }
+
+            defult: ;
+            
         }
     }
 
         /*****彩灯自设颜色*********/
-        //%blockId=c_colorLED2_Actuator block="单色灯 引脚R %pin|引脚G %pin2|引脚B %pin3|红色(0~255) %value1|绿色(0~255) %value2|蓝色(0~255) %value3"
+        //%blockId=c_colorLED2_Actuator block="彩灯 引脚R %pin|引脚G %pin2|引脚B %pin3|红色(0~255) %value1|绿色(0~255) %value2|蓝色(0~255) %value3"
         //%weight=88 blockGap=10 color="#150DED"
         //%value1.max=255 value1.min=0 value2.max=255 value2.min=0 value3.max=255 value3.min=0
         export function c_colorLED2_Actuator(pin1: AnalogPin, pin2: AnalogPin, pin3: AnalogPin, value1: number, value2: number, value3: number): void {
             pins.analogWritePin(pin1, value1 * 4);
-            pins.analogWritePin(pin1, value1 * 4);
-            pins.analogWritePin(pin1, value1 * 4);
+            pins.analogWritePin(pin2, value2 * 4);
+            pins.analogWritePin(pin3, value3 * 4);
         }
 
         /*****彩灯逐渐点亮*********/
