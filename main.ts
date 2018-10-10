@@ -220,32 +220,6 @@ namespace 执行器类 {
             pins.analogWritePin(pin3, value3 * 4);
         }
 
-        /*****彩灯逐渐点亮*********/
-        //%blockId=c_colorLED3_Actuator block="彩灯逐渐点亮 引脚R %pin|引脚G %pin2|引脚B %pin3|红色(0~255) %value1|绿色(0~255) %value2|蓝色(0~255) %value3|时间%value 秒"
-        //%value1.max=255 value1.min=0 value2.max=255 value2.min=0 value3.max=255 value3.min=0
-        //%weight=86 blockGap=10 color="#150DED"
-        export function c_colorLED3_Actuator(pin1: AnalogPin, pin2: AnalogPin, pin3: AnalogPin, value1: number, value2: number, value3: number, value: number): void {
-            for (let i = 0; i < 256; i++) {
-                pins.analogWritePin(pin1, i * 4);
-                pins.analogWritePin(pin2, i * 4);
-                pins.analogWritePin(pin3, i * 4);
-                control.waitMicros(value * 1000000 / 256);
-            }
-        }
-
-
-        /*****彩灯逐渐熄灭*********/
-        //%blockId=c_colorLED4_Actuator block="彩灯逐渐熄灭 引脚R %pin|引脚G %pin2|引脚B %pin3|红色(0~255) %value1|绿色(0~255) %value2|蓝色(0~255) %value3|时间%value 秒"
-        //%value1.max=255 value1.min=0 value2.max=255 value2.min=0 value3.max=255 value3.min=0
-        //%weight=84 blockGap=10 color="#150DED"
-        export function c_colorLED4_Actuator(pin1: AnalogPin, pin2: AnalogPin, pin3: AnalogPin, value1: number, value2: number, value3: number, value: number): void {
-            for (let i = 0; i < 256; i++) {
-                pins.analogWritePin(pin1, 1020 - i * 4);
-                pins.analogWritePin(pin2, 1020 - i * 4);
-                pins.analogWritePin(pin3, 1020 - i * 4);
-                control.waitMicros(value * 1000000 / 256);
-            }
-        }
 
         /*****舵机*********/
         
