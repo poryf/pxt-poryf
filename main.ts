@@ -1,227 +1,211 @@
-/*****芯片类*********/
-//%weight=106 color="#8B008B" icon="\uF610"
-namespace 芯片类 {
-        function c_HC595_getValue(value: number): number {
-            if (value != 0) {
-                return 1;
-            } else {
-                return 0;
-            }
+/**
+* makecode I2C LCD1602 package for microbit.
+* From microbit/micropython Chinese community.
+* http://www.micropython.org.cn
+*/
+
+/**
+ * Custom blocks
+ */
+//% weight=20 color=#0fbc11 icon="▀"
+namespace LCD1602显示屏 {
+    let i2cAddr: number // 0x3F: PCF8574A, 0x27: PCF8574
+    let BK: number      // backlight control
+    let RS: number      // command/data
+
+    // set LCD reg
+    function setreg(d: number) {
+        pins.i2cWriteNumber(i2cAddr, d, NumberFormat.Int8LE)
+        basic.pause(1)
+    }
+
+    // send data to I2C bus
+    function set(d: number) {
+        d = d & 0xF0
+        d = d + BK + RS
+        setreg(d)
+        setreg(d + 4)
+        setreg(d)
+    }
+
+    // send command
+    function cmd(d: number) {
+        RS = 0
+        set(d)
+        set(d << 4)
+    }
+
+    // send data
+    function dat(d: number) {
+        RS = 1
+        set(d)
+        set(d << 4)
+    }
+
+    // auto get LCD address
+    function AutoAddr() {
+        let k = true
+        let addr = 0x20
+        let d1 = 0, d2 = 0
+        while (k && (addr < 0x28)) {
+            pins.i2cWriteNumber(addr, -1, NumberFormat.Int32LE)
+            d1 = pins.i2cReadNumber(addr, NumberFormat.Int8LE) % 16
+            pins.i2cWriteNumber(addr, 0, NumberFormat.Int16LE)
+            d2 = pins.i2cReadNumber(addr, NumberFormat.Int8LE)
+            if ((d1 == 7) && (d2 == 0)) k = false
+            else addr += 1
         }
-        /*********74HC595写入数据(16引脚接3V3，13引脚接GND，10引脚接3V3，8引脚接GND)********/
-        //%blockId=c_HC595_Actuator block="74HC595 14号引脚 %pin1|11号引脚 %pin2|12号引脚 %pin3|数据 %val"
-        //%weight=98 blockGap=10 color="#87CEEB"
-        export function c_HC595_Actuator(pin1: DigitalPin, pin2: DigitalPin, pin3: DigitalPin, val: number): void {
-            pins.digitalWritePin(pin3, 0);
-            for (let i = 0; i < 8; i++) {
-                pins.digitalWritePin(pin1, c_HC595_getValue(val & (1 << i)));
-                pins.digitalWritePin(pin2, 1);
-                pins.digitalWritePin(pin2, 0);
-            }
-            pins.digitalWritePin(pin3, 1);
+        if (!k) return addr
+
+        addr = 0x38
+        while (k && (addr < 0x40)) {
+            pins.i2cWriteNumber(addr, -1, NumberFormat.Int32LE)
+            d1 = pins.i2cReadNumber(addr, NumberFormat.Int8LE) % 16
+            pins.i2cWriteNumber(addr, 0, NumberFormat.Int16LE)
+            d2 = pins.i2cReadNumber(addr, NumberFormat.Int8LE)
+            if ((d1 == 7) && (d2 == 0)) k = false
+            else addr += 1
         }
-    
+        if (!k) return addr
+        else return 0
+
+    }
+
+    /**
+     * initial LCD, set I2C address. Address is 39/63 for PCF8574/PCF8574A
+     * @param Addr is i2c address for LCD, eg: 0, 39, 63. 0 is auto find address
+     */
+    //% blockId="I2C_LCD1620_SET_ADDRESS" block="设置显示屏地址为 %addr"
+    //% weight=100 blockGap=8
+    //% parts=LCD1602_I2C trackArgs=0
+    export function LcdInit(Addr: number) {
+        if (Addr == 0) i2cAddr = AutoAddr()
+        else i2cAddr = Addr
+        BK = 8
+        RS = 0
+        cmd(0x33)       // set 4bit mode
+        basic.pause(5)
+        set(0x30)
+        basic.pause(5)
+        set(0x20)
+        basic.pause(5)
+        cmd(0x28)       // set mode
+        cmd(0x0C)
+        cmd(0x06)
+        cmd(0x01)       // clear
+    }
+
+    /**
+     * show a number in LCD at given position
+     * @param n is number will be show, eg: 10, 100, 200
+     * @param x is LCD column position, eg: 0
+     * @param y is LCD row position, eg: 0
+     */
+    //% blockId="I2C_LCD1620_SHOW_NUMBER" block="显示数字 %n|在 x %x|y %y"
+    //% weight=90 blockGap=8
+    //% x.min=0 x.max=15
+    //% y.min=0 y.max=1
+    //% parts=LCD1602_I2C trackArgs=0
+    export function ShowNumber(n: number, x: number, y: number): void {
+        let s = n.toString()
+        ShowString(s, x, y)
+    }
+
+    /**
+     * show a string in LCD at given position
+     * @param s is string will be show, eg: "Hello"
+     * @param x is LCD column position, [0 - 15], eg: 0
+     * @param y is LCD row position, [0 - 1], eg: 0
+     */
+    //% blockId="I2C_LCD1620_SHOW_STRING" block="显示字符串 %s|在 x %x|y %y"
+    //% weight=90 blockGap=8
+    //% x.min=0 x.max=15
+    //% y.min=0 y.max=1
+    //% parts=LCD1602_I2C trackArgs=0
+    export function ShowString(s: string, x: number, y: number): void {
+        let a: number
+
+        if (y > 0)
+            a = 0xC0
+        else
+            a = 0x80
+        a += x
+        cmd(a)
+
+        for (let i = 0; i < s.length; i++) {
+            dat(s.charCodeAt(i))
+        }
+    }
+
+    /**
+     * turn on LCD
+     */
+    //% blockId="I2C_LCD1620_ON" block="开启显示屏"
+    //% weight=81 blockGap=8
+    //% parts=LCD1602_I2C trackArgs=0
+    export function on(): void {
+        cmd(0x0C)
+    }
+
+    /**
+     * turn off LCD
+     */
+    //% blockId="I2C_LCD1620_OFF" block="关闭显示屏"
+    //% weight=80 blockGap=8
+    //% parts=LCD1602_I2C trackArgs=0
+    export function off(): void {
+        cmd(0x08)
+    }
+
+    /**
+     * clear all display content
+     */
+    //% blockId="I2C_LCD1620_CLEAR" block="清空显示屏"
+    //% weight=85 blockGap=8
+    //% parts=LCD1602_I2C trackArgs=0
+    export function clear(): void {
+        cmd(0x01)
+    }
+
+    /**
+     * turn on LCD backlight
+     */
+    //% blockId="I2C_LCD1620_BACKLIGHT_ON" block="打开背光"
+    //% weight=71 blockGap=8
+    //% parts=LCD1602_I2C trackArgs=0
+    export function BacklightOn(): void {
+        BK = 8
+        cmd(0)
+    }
+
+    /**
+     * turn off LCD backlight
+     */
+    //% blockId="I2C_LCD1620_BACKLIGHT_OFF" block="关闭背光"
+    //% weight=70 blockGap=8
+    //% parts=LCD1602_I2C trackArgs=0
+    export function BacklightOff(): void {
+        BK = 0
+        cmd(0)
+    }
+
+    /**
+     * shift left
+     */
+    //% blockId="I2C_LCD1620_SHL" block="左移一位"
+    //% weight=61 blockGap=8
+    //% parts=LCD1602_I2C trackArgs=0
+    export function shl(): void {
+        cmd(0x18)
+    }
+
+    /**
+     * shift right
+     */
+    //% blockId="I2C_LCD1620_SHR" block="右移一位"
+    //% weight=60 blockGap=8
+    //% parts=LCD1602_I2C trackArgs=0
+    export function shr(): void {
+        cmd(0x1C)
+    }
 }
-
-/*****传感器类*********/
-//%weight=104 color="#DAF208" icon="\uF610"
-namespace 传感器类 {
-    export enum c_Button {
-        //%blockId="Press" block="按下"
-        Press = 1,
-        //%blockId="noPress" block="松开"
-        noPress = 0
-    }
-
-    export enum c_Voice {
-        //%blockId="Voice" block="有声"
-        Voice = 0,
-        //%blockId="noVoice" block="无声"
-        noVoice = 1
-    }
-
-    export enum c_Touch {
-        //%blockId="Touch" block="被触摸"
-        Touch = 1,
-        //%blockId="noTouch" block="未被触摸"
-        noTouch =0
-    }
-
-    export enum c_Rain {
-        //%blockId="Rain" block="有雨滴"
-        Rain = 0,
-        //%blockId="noRain" block="没有雨滴"
-        noRain = 1
-    }
-
-     /*********按键********/
-    //%blockId=c_Button_Sensor block="按键 引脚%pin|状态%value"
-    //%weight=98 blockGap=10 color="#87CEEB"
-    export function c_Button_Sensor(pin: DigitalPin, value: c_Button): boolean {
-        pins.setPull(pin, PinPullMode.PullUp);
-        if (pins.digitalReadPin(pin) == value) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-    /*********声音传感器********/
-    //%blockId=c_Voice_Sensor block="声音传感器 引脚%pin|状态%value"
-    //%weight=96 blockGap=10 color="#87CEEB"
-    export function c_Voice_Sensor(pin: DigitalPin, value: c_Voice): boolean {
-        pins.setPull(pin, PinPullMode.PullUp);
-        if (pins.digitalReadPin(pin) == value) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-    /*********触摸传感器********/
-    //%blockId=c_Touch_Sensor block="触摸传感器 引脚%pin|状态%value"
-    //%weight=94 blockGap=10 color="#87CEEB"
-    export function c_Touch_Sensor(pin: DigitalPin, value: c_Touch): boolean {
-        pins.setPull(pin, PinPullMode.PullUp);
-        if (pins.digitalReadPin(pin) == value) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-    /*********雨滴传感器********/
-    //%blockId=c_Rain_Sensor block="雨滴传感器 引脚%pin|状态%value"
-    //%weight=92 blockGap=10 color="#87CEEB"
-    export function c_Rain_Sensor(pin: DigitalPin, value: c_Rain): boolean {
-        pins.setPull(pin, PinPullMode.PullUp);
-        if (pins.digitalReadPin(pin) == value) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-    /*********旋转电位器********/
-    //%blockId=c_Rotary_Sensor block="获取旋转电位器模拟值 引脚%pin"
-    //%weight=90 blockGap=10 color="#87CEEB"
-    export function c_Rotary_Sensor(pin: AnalogPin): number {
-        return pins.analogReadPin(pin);
-    }
-
-
-
-
-
-
-}
-
-/*****执行器类*********/
-//%weight=102 color="#150DED" icon="\uF610"
-namespace 执行器类 {
-    export enum c_LED {
-        //%blockId="ON" block="亮"
-        ON = 1,
-        //%blockId="OFF" block="灭"
-        OFF = 0
-    }
-
-    export enum c_colorLED {
-        //%blockId="Red" block="红色"
-        Red = 0,
-        //%blockId="Green" block="绿色"
-        Green = 1,
-        //%blockId="Blue" block="蓝色"
-        Blue = 2,
-        //%blockId="OFF" block="关闭"
-        OFF = 3
-    }
-
-    /*****单色灯亮灭*********/
-    //%blockId=c_LED1_Actuator block="单色灯 引脚%pin|状态%value"
-    //%weight=98 blockGap=10 color="#150DED"
-    export function c_LED_Actuator(pin: DigitalPin, value: c_LED): void {
-        pins.digitalWritePin(pin, value);
-    }
-
-    /*****单色灯亮度调节*********/
-    //%blockId=c_LED2_Actuator block="单色灯 引脚%pin|亮度(0~255)%value" 
-    //%value.max=255 value.min=0
-    //%weight=96 blockGap=10 color="#150DED"
-    export function c_LED2_Actuator(pin: AnalogPin, value: number): void {
-        pins.analogWritePin(pin, value * 4);
-    }
-
-    /*****单色灯逐渐点亮*********/
-    //%blockId=c_LED3_Actuator block="单色灯逐渐点亮 引脚%pin|时间%value 秒" 
-    //%weight=94 blockGap=10 color="#150DED"
-    export function c_LED3_Actuator(pin: AnalogPin, value: number): void {
-        for (let i = 0; i < 256; i++) {
-            pins.analogWritePin(pin, i * 4);
-            control.waitMicros(value * 1000000 / 256);
-        }
-    }
-
-    /*****单色灯逐渐熄灭*********/
-    //%blockId=c_LED4_Actuator block="单色灯逐渐熄灭 引脚%pin|时间%value 秒" 
-    //%weight=92 blockGap=10 color="#150DED"
-    export function c_LED4_Actuator(pin: AnalogPin, value: number): void {
-        for (let i = 0; i < 256; i++) {
-            pins.analogWritePin(pin, 1020 - i * 4);
-            control.waitMicros(value * 1000000 / 256);
-        }
-    }
-
-    /*****彩灯三种颜色*********/
-    //%blockId=c_colorLED1_Actuator block="彩灯 引脚R %pin|引脚G %pin2|引脚B %pin3|状态%value" 
-    //%weight=90 blockGap=10 color="#150DED"
-    export function c_colorLED1_Actuator(pin1: DigitalPin, pin2: DigitalPin, pin3: DigitalPin, value: c_colorLED): void {
-        switch (value) {
-            case 0: 
-                pins.digitalWritePin(pin1, 1);
-                pins.digitalWritePin(pin2, 0);
-                pins.digitalWritePin(pin3, 0);
-                break;
-            
-            case 1: 
-                pins.digitalWritePin(pin1, 0);
-                pins.digitalWritePin(pin2, 1);
-                pins.digitalWritePin(pin3, 0);
-                break;
-            
-            case 2: 
-                pins.digitalWritePin(pin1, 0);
-                pins.digitalWritePin(pin2, 0);
-                pins.digitalWritePin(pin3, 1);
-                break;
-            
-            case 3:
-                pins.digitalWritePin(pin1, 0);
-                pins.digitalWritePin(pin2, 0);
-                pins.digitalWritePin(pin3, 0);
-                break;
-
-            defult: ;
-            
-        }
-    }
-
-        /*****彩灯自设颜色*********/
-        //%blockId=c_colorLED2_Actuator block="彩灯 引脚R %pin|引脚G %pin2|引脚B %pin3|红色(0~255) %value1|绿色(0~255) %value2|蓝色(0~255) %value3"
-        //%weight=88 blockGap=10 color="#150DED"
-        //%value1.max=255 value1.min=0 value2.max=255 value2.min=0 value3.max=255 value3.min=0
-        export function c_colorLED2_Actuator(pin1: AnalogPin, pin2: AnalogPin, pin3: AnalogPin, value1: number, value2: number, value3: number): void {
-            pins.analogWritePin(pin1, value1 * 4);
-            pins.analogWritePin(pin2, value2 * 4);
-            pins.analogWritePin(pin3, value3 * 4);
-        }
-
-
-        /*****舵机*********/
-        
-
-    }
