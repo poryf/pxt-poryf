@@ -7,7 +7,7 @@
 /**
  * Custom blocks
  */
-//% weight=20 color=#0fbc11 icon="▀"
+//% weight=20 color=#0fbc11 icon="O"
 namespace LCD1602显示屏 {
     let i2cAddr: number // 0x3F: PCF8574A, 0x27: PCF8574
     let BK: number      // backlight control
@@ -621,7 +621,7 @@ namespace OLED12864显示屏 {
     }
 }
 
-//% weight=20 color=#87CEEB icon="8"
+//% weight=20 color=#87CEEB icon="O"
 namespace 传感器 {
     //% blockId=mbit_ultrasonic block="超声波传感器|Trig %Trig|Echo %Echo"
     //% color="#87CEEB"
@@ -643,7 +643,7 @@ namespace 传感器 {
     }
 }
 
-//% weight=100 color=#50A820 icon="0"
+//% weight=20 color=#50A820 icon="O"
 namespace 四位数码管 {
     let TM1637_CMD1 = 0x40;
     let TM1637_CMD2 = 0xC0;
@@ -872,5 +872,17 @@ namespace 四位数码管 {
         tm.brightness = intensity;
         tm.init();
         return tm;
+    }
+}
+
+//% weight=20 color=#0000CD icon="O"
+namespace 舵机 {
+    //% blockId=mbit_Servo block="舵机|引脚 %pin|角度 %value"
+    //% weight=100
+    //% blockGap=10
+    //% color="#0000CD"
+    //% value.min=0 value.max=180
+    export function Servo(pin: AnalogPin, value: number): void {
+        pins.servoWritePin(pin, value);
     }
 }
